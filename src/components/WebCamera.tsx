@@ -21,9 +21,10 @@ export default function WebCamera({ mobilenet, model }: Models) {
 
   const [actionCounts, setActionCounts] = useState<Array<number>>([0, 0]);
 
-  const canvasRef1 = useRef<HTMLCanvasElement | null>(null);
-  const canvasRef2 = useRef<HTMLCanvasElement | null>(null);
-  const canvasRefs = [canvasRef1, canvasRef2];
+  const canvasRefs = [
+    useRef<HTMLCanvasElement | null>(null),
+    useRef<HTMLCanvasElement | null>(null),
+  ];
 
   const [trainingDataInputs, setTrainingDataInputs] = useState<tf.Tensor[]>([]);
   const [trainingDataOutputs, setTrainingDataOutputs] = useState<number[]>([]);
@@ -77,7 +78,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
             [MOBILE_NET_INPUT_HEIGHT, MOBILE_NET_INPUT_WIDTH],
             true
           );
-          
+
           const batchedTensor = resizedTensorFrame.div(255).expandDims(0);
           const imageFeatures = mobilenet.predict(batchedTensor) as tf.Tensor;
 
@@ -174,9 +175,6 @@ export default function WebCamera({ mobilenet, model }: Models) {
           }
         });
 
-        console.log("Shape of imageFeatures tensor:", imageFeatures.shape);
-        console.log("Label being stored:", idx);
-
         setTrainingDataInputs((oldInputs) => [...oldInputs, imageFeatures]);
         setTrainingDataOutputs((oldOutputs) => [...oldOutputs, idx]);
       }
@@ -186,11 +184,9 @@ export default function WebCamera({ mobilenet, model }: Models) {
 
   const snap = useCallback(
     (idx: number) => {
-      // number of frames to capture on each click
       const frameCount = 5;
 
       for (let i = 0; i < frameCount; i++) {
-        // add a slight delay before capturing each frame
         setTimeout(() => {
           const video = videoRef.current;
           const canvas = canvasRefs[idx]?.current;
@@ -241,7 +237,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
   }
 
   return (
-    <div className="">
+    <div className="w-10/12">
       <video
         ref={videoRef}
         autoPlay
@@ -253,8 +249,10 @@ export default function WebCamera({ mobilenet, model }: Models) {
       <div className="space-y-4 border border-black">
         <Status
           state={determineState()}
-          logs={determineState() === ModelState.PREDICT ? logs : undefined}
-          epoch={determineState() === ModelState.PREDICT ? epoch : undefined}
+          logs={determineState() === ModelState.TRAIN_MODEL ? logs : undefined}
+          epoch={
+            determineState() === ModelState.TRAIN_MODEL ? epoch : undefined
+          }
           onClick={
             determineState() === ModelState.TRAIN_MODEL ? trainModel : undefined
           }

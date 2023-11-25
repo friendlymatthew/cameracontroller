@@ -8,6 +8,7 @@ import {
 import WebCamera from "~/components/WebCamera";
 import { useSetRecoilState } from "recoil";
 import { ModelState, modelStateAtom } from "~/atoms/modelStateAtom";
+import Game from "~/components/Game";
 
 export default function Home() {
   const setModelState = useSetRecoilState(modelStateAtom);
@@ -38,8 +39,9 @@ export default function Home() {
         <meta name="description" content="Created by Matthew Kim" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="flex h-screen w-screen flex-col items-center justify-center">
+      <main className="flex flex-col w-screen justify-center">
         <WebCamera mobilenet={models.mobilenet} model={models.model} />
+        <Game />
       </main>
     </>
   );

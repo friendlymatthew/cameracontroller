@@ -1,7 +1,7 @@
 import { atom } from "recoil";
-import type { ACTION } from "~/utilities/useModel";
+import { ACTION } from "~/utilities/useModel";
 
-export const gameActionAtom = atom<ACTION | null>({
+export const gameActionAtom = atom<ACTION>({
   key: "GameAction",
-  default: null,
+  default: ACTION.STOP,
 });
