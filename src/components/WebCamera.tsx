@@ -57,7 +57,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/require-await
     async function predictLoop() {
-      let newGameControl = null; // Placeholder for new game control state
+      let newGameControl = CLASS_NAMES[0]; // Placeholder for new game control state
 
       if (predict) {
         tf.tidy(() => {
@@ -99,8 +99,10 @@ export default function WebCamera({ mobilenet, model }: Models) {
             }
           }
         });
-        console.log(newGameControl);
-        setGameAction(newGameControl);
+
+        if (newGameControl !== undefined) {
+          setGameAction(newGameControl);
+        }
 
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         window.requestAnimationFrame(predictLoop);
