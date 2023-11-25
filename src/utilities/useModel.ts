@@ -8,6 +8,7 @@ export interface Models {
 export enum ACTION {
   STOP = "Stop",
   RUN = "Run",
+  JUMP = "Jump",
 }
 export const STOP_DATA_GATHER = -1;
 export const CLASS_NAMES = [ACTION.STOP, ACTION.RUN];
@@ -19,7 +20,7 @@ export function initializeModel() {
   model.add(
     tf.layers.dense({ inputShape: [1024], units: 128, activation: "relu" })
   );
-  model.add(tf.layers.dense({ units: 2, activation: "softmax" }));
+  model.add(tf.layers.dense({ units: CLASS_NAMES.length, activation: "softmax" }));
   model.summary();
   model.compile({
     optimizer: "adam",

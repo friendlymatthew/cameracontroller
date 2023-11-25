@@ -36,25 +36,23 @@ export default function Game() {
 
     const renderer = rendererRef.current;
 
-    console.log("Setting up the scene");
-
-    // Scene, Camera, Renderer setup
     const scene = new THREE.Scene();
+
     const camera = new THREE.PerspectiveCamera(
       45,
       window.innerWidth / window.innerHeight,
       1,
       100
     );
-    camera.position.set(1, 2, -10);
+    camera.position.set(0, 2, -10);
     camera.lookAt(0, 1, 0);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true; // Optional, but this gives a nice inertia feel
+    controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
     const planeGeometry = new THREE.PlaneGeometry(100, 100);
-    const planeMaterial = new THREE.MeshLambertMaterial(); // Green, for example
+    const planeMaterial = new THREE.MeshPhongMaterial({ color: "#ffffff", shininess: 200 }); // Green, for example
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
     plane.rotation.x = -Math.PI / 2;
     plane.position.y = 0;
@@ -96,7 +94,6 @@ export default function Game() {
       if (runAnimation && idleAnimation) {
         console.log("Found run and idle animations");
         const runAction = mixer.clipAction(runAnimation);
-        runAction.setEffectiveTimeScale(0.8);
         runActionRef.current = runAction;
 
         const idleAction = mixer.clipAction(idleAnimation);
@@ -129,7 +126,7 @@ export default function Game() {
       mixerRef.current?.update(delta);
 
       if (gameAction === ACTION.RUN && modelRef.current) {
-        modelRef.current.position.z -= 0.1 * delta;
+        plane.position.z += 0.1 * delta;
       }
 
       renderer.render(scene, camera);

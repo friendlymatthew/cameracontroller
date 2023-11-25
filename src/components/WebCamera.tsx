@@ -261,7 +261,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
         )}
 
         {modelState !== ModelState.LOADING && (
-          <div className="flex justify-center space-x-2 bg-white">
+          <div className="flex justify-center space-x-2 bg-white py-2">
             {CLASS_NAMES.map((action, idx) => (
               <div key={idx} className="text-center">
                 <p>{action}</p>
@@ -275,13 +275,11 @@ export default function WebCamera({ mobilenet, model }: Models) {
                     actionCounts[idx] === 0 && "bg-white"
                   } ${
                     predict &&
-                    gameAction != null &&
-                    ((idx === 0 && gameAction === CLASS_NAMES[0]) ||
-                      (idx === 1 && gameAction === CLASS_NAMES[1])) &&
-                    "shadow-xl shadow-yellow-400"
+                    gameAction === action &&
+                    "shadow-lg shadow-yellow-400"
                   }`}
                 ></canvas>{" "}
-                <p>{actionCounts[idx]}</p>
+                <p>{!predict && actionCounts[idx]}</p>
               </div>
             ))}
           </div>
