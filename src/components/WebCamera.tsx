@@ -77,7 +77,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
             [MOBILE_NET_INPUT_HEIGHT, MOBILE_NET_INPUT_WIDTH],
             true
           );
-          // todo -- let's actually batch since we can batch
+          
           const batchedTensor = resizedTensorFrame.div(255).expandDims(0);
           const imageFeatures = mobilenet.predict(batchedTensor) as tf.Tensor;
 
