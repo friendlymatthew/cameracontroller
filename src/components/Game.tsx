@@ -6,6 +6,7 @@ import React, { useRef, useEffect } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { gameActionAtom } from "~/atoms/gameActionAtom";
 import { ACTION } from "~/utilities/useModel";
 
@@ -15,7 +16,7 @@ export default function Game() {
 
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-
+  const modelRef = useRef<THREE.Group | null>(null);
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const runActionRef = useRef<THREE.AnimationAction | null>(null);
   const idleActionRef = useRef<THREE.AnimationAction | null>(null);
@@ -45,32 +46,46 @@ export default function Game() {
       1,
       100
     );
-    camera.position.set(1, 2, -3);
+    camera.position.set(1, 2, -10);
     camera.lookAt(0, 1, 0);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; // Optional, but this gives a nice inertia feel
+    controls.dampingFactor = 0.05;
+
+    const planeGeometry = new THREE.PlaneGeometry(100, 100);
+    const planeMaterial = new THREE.MeshLambertMaterial(); // Green, for example
+    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane.rotation.x = -Math.PI / 2;
+    plane.position.y = 0;
+    scene.add(plane);
+
+    const axesHelper = new THREE.AxesHelper(5);
+    scene.add(axesHelper);
+
+    const gridHelper = new THREE.GridHelper(10, 10);
+    scene.add(gridHelper);
 
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     mountRef.current.appendChild(renderer.domElement);
 
-    // Add Ambient Light for overall illumination
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
-    // Add Directional Light for more focused illumination
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(5, 5, 5);
     scene.add(directionalLight);
 
-    // Load Soldier Model
     const loader = new GLTFLoader();
     loader.load("/Soldier.glb", (gltf) => {
       console.log("Loaded Soldier model");
 
-      const model = gltf.scene;
-      scene.add(model);
+      modelRef.current = gltf.scene;
+      scene.add(modelRef.current);
 
-      const mixer = new THREE.AnimationMixer(model);
+      const mixer = new THREE.AnimationMixer(modelRef.current);
       mixerRef.current = mixer;
 
       const runAnimation = gltf.animations.find((anim) => anim.name === "Run");
@@ -81,7 +96,7 @@ export default function Game() {
       if (runAnimation && idleAnimation) {
         console.log("Found run and idle animations");
         const runAction = mixer.clipAction(runAnimation);
-        runAction.setEffectiveTimeScale(0.5); // Set the time scale for the running animation
+        runAction.setEffectiveTimeScale(0.8);
         runActionRef.current = runAction;
 
         const idleAction = mixer.clipAction(idleAnimation);
@@ -97,11 +112,26 @@ export default function Game() {
       }
     });
 
+    const onWindowResize = () => {
+      if (rendererRef.current && camera) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+      }
+    };
+
+    window.addEventListener("resize", onWindowResize);
+
     const clock = new THREE.Clock();
     const animate = () => {
       requestAnimationFrame(animate);
       const delta = clock.getDelta();
       mixerRef.current?.update(delta);
+
+      if (gameAction === ACTION.RUN && modelRef.current) {
+        modelRef.current.position.z -= 0.1 * delta;
+      }
+
       renderer.render(scene, camera);
     };
     animate();
@@ -110,6 +140,8 @@ export default function Game() {
       if (mountRef.current && rendererRef.current) {
         mountRef.current.removeChild(rendererRef.current.domElement);
       }
+
+      window.removeEventListener("resize", onWindowResize);
     };
   }, []);
 

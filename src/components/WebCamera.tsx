@@ -281,7 +281,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
                     "shadow-xl shadow-yellow-400"
                   }`}
                 ></canvas>{" "}
-                {actionCounts[idx]}
+                <p>{actionCounts[idx]}</p>
               </div>
             ))}
           </div>
