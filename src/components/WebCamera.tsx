@@ -237,29 +237,29 @@ export default function WebCamera({ mobilenet, model }: Models) {
   }
 
   return (
-    <div className="w-10/12">
-      <video
-        ref={videoRef}
-        autoPlay
-        width="720"
-        height="560"
-        className="scale-x-[-1]"
-      ></video>
+    <div className="">
+      <video ref={videoRef} autoPlay className="w-72 scale-x-[-1]"></video>
 
-      <div className="space-y-4 border border-black">
-        <Status
-          state={determineState()}
-          logs={determineState() === ModelState.TRAIN_MODEL ? logs : undefined}
-          epoch={
-            determineState() === ModelState.TRAIN_MODEL ? epoch : undefined
-          }
-          onClick={
-            determineState() === ModelState.TRAIN_MODEL ? trainModel : undefined
-          }
-        />
+      <div className="">
+        {!predict && (
+          <Status
+            state={determineState()}
+            logs={
+              determineState() === ModelState.TRAIN_MODEL ? logs : undefined
+            }
+            epoch={
+              determineState() === ModelState.TRAIN_MODEL ? epoch : undefined
+            }
+            onClick={
+              determineState() === ModelState.TRAIN_MODEL
+                ? trainModel
+                : undefined
+            }
+          />
+        )}
 
         {modelState !== ModelState.LOADING && (
-          <div className="flex justify-center space-x-2 p-4">
+          <div className="flex justify-center space-x-2 bg-white">
             {CLASS_NAMES.map((action, idx) => (
               <div key={idx} className="text-center">
                 <p>{action}</p>
@@ -269,16 +269,15 @@ export default function WebCamera({ mobilenet, model }: Models) {
                   onClick={() => {
                     snap(idx);
                   }}
-                  className={`scale-x-[-1] cursor-pointer border border-black ${
+                  className={`h-32 w-32 scale-x-[-1] cursor-pointer border border-black ${
                     actionCounts[idx] === 0 && "bg-white"
                   } ${
+                    predict &&
                     gameAction != null &&
                     ((idx === 0 && gameAction === CLASS_NAMES[0]) ||
                       (idx === 1 && gameAction === CLASS_NAMES[1])) &&
                     "shadow-xl shadow-yellow-400"
                   }`}
-                  width="200"
-                  height="200"
                 ></canvas>{" "}
                 {actionCounts[idx]}
               </div>

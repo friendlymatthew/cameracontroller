@@ -39,8 +39,10 @@ export default function Home() {
         <meta name="description" content="Created by Matthew Kim" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="flex flex-col w-screen justify-center">
-        <WebCamera mobilenet={models.mobilenet} model={models.model} />
+      <main className="relative flex w-screen flex-col">
+        <div className="absolute left-0 top-0 z-10">
+          <WebCamera mobilenet={models.mobilenet} model={models.model} />
+        </div>
         <Game />
       </main>
     </>

@@ -71,8 +71,12 @@ export default function Game() {
 
       if (runAnimation && idleAnimation) {
         console.log("Found run and idle animations");
-        runActionRef.current = mixer.clipAction(runAnimation);
-        idleActionRef.current = mixer.clipAction(idleAnimation);
+        const runAction = mixer.clipAction(runAnimation);
+        runAction.setEffectiveTimeScale(0.5); // Set the time scale for the running animation
+        runActionRef.current = runAction;
+
+        const idleAction = mixer.clipAction(idleAnimation);
+        idleActionRef.current = idleAction;
 
         if (gameAction === ACTION.RUN) {
           console.log("Playing run animation initially");
@@ -84,7 +88,6 @@ export default function Game() {
       }
     });
 
-    // Animation Loop
     const clock = new THREE.Clock();
     const animate = () => {
       requestAnimationFrame(animate);
@@ -93,8 +96,6 @@ export default function Game() {
       renderer.render(scene, camera);
     };
     animate();
-
-    // ... (Rest of the resize handling and cleanup)
   }, []);
 
   useEffect(() => {
@@ -104,7 +105,6 @@ export default function Game() {
     const idleAction = idleActionRef.current;
 
     if (!mixer || !runAction || !idleAction) {
-      console.log("Mixer or actions not available for update");
       return;
     }
 
