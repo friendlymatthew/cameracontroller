@@ -13,7 +13,7 @@ import { ModelState, modelStateAtom } from "~/atoms/modelStateAtom";
 import { gameActionAtom } from "~/atoms/gameActionAtom";
 
 export default function WebCamera({ mobilenet, model }: Models) {
-  const [modelState, setModelState] = useRecoilState(modelStateAtom);
+  const modelState = useRecoilValue(modelStateAtom);
   const [gameAction, setGameAction] = useRecoilState(gameActionAtom);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -54,6 +54,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/require-await
     async function predictLoop() {
       let newGameControl = null; // Placeholder for new game control state
 
@@ -69,24 +70,24 @@ export default function WebCamera({ mobilenet, model }: Models) {
 
           const videoFrameAsTensor = tf.browser
             .fromPixels(videoRef.current)
-            .div(255);
+            .toFloat();
+
           const resizedTensorFrame = tf.image.resizeBilinear(
             videoFrameAsTensor,
             [MOBILE_NET_INPUT_HEIGHT, MOBILE_NET_INPUT_WIDTH],
             true
           );
-          const imageFeatures = mobilenet.predict(
-            resizedTensorFrame.expandDims()
-          ) as tf.Tensor;
+          // todo -- let's actually batch since we can batch
+          const batchedTensor = resizedTensorFrame.div(255).expandDims(0);
+          const imageFeatures = mobilenet.predict(batchedTensor) as tf.Tensor;
 
           if (imageFeatures instanceof tf.Tensor) {
             const prediction = model.predict(imageFeatures) as tf.Tensor1D;
-            // Print prediction Tensor for debugging
             prediction.print(true);
 
             const highestIndex: number | undefined = prediction
               .argMax(1)
-              .dataSync()[0]; // Specify axis
+              .dataSync()[0];
             prediction.dispose();
 
             if (
@@ -100,6 +101,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
         console.log(newGameControl);
         setGameAction(newGameControl);
 
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         window.requestAnimationFrame(predictLoop);
       }
     }
@@ -107,7 +109,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
     if (model && mobilenet && model) {
       predictLoop().catch(console.error);
     }
-  }, [model, predict, mobilenet]);
+  }, [model, predict, mobilenet, setGameAction]);
 
   const trainModel = useCallback(async (): Promise<void> => {
     tf.util.shuffleCombo(trainingDataInputs, trainingDataOutputs);
