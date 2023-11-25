@@ -14,6 +14,7 @@ export default function Game() {
   console.log("Game Action: ", gameAction); // Log current game action
 
   const mountRef = useRef<HTMLDivElement>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
 
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const runActionRef = useRef<THREE.AnimationAction | null>(null);
@@ -24,6 +25,15 @@ export default function Game() {
       console.log("Mount ref is not available.");
       return;
     }
+
+    if (!rendererRef.current) {
+      rendererRef.current = new THREE.WebGLRenderer({ antialias: true });
+      rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+      rendererRef.current.shadowMap.enabled = true;
+      mountRef.current.appendChild(rendererRef.current.domElement);
+    }
+
+    const renderer = rendererRef.current;
 
     console.log("Setting up the scene");
 
@@ -38,7 +48,6 @@ export default function Game() {
     camera.position.set(1, 2, -3);
     camera.lookAt(0, 1, 0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
@@ -96,6 +105,12 @@ export default function Game() {
       renderer.render(scene, camera);
     };
     animate();
+
+    return () => {
+      if (mountRef.current && rendererRef.current) {
+        mountRef.current.removeChild(rendererRef.current.domElement);
+      }
+    };
   }, []);
 
   useEffect(() => {
