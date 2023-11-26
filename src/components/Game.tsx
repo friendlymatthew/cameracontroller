@@ -17,8 +17,10 @@ export default function Game() {
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const modelRef = useRef<THREE.Group | null>(null);
+
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const runActionRef = useRef<THREE.AnimationAction | null>(null);
+  const walkActionRef = useRef<THREE.AnimationAction | null>(null);
   const idleActionRef = useRef<THREE.AnimationAction | null>(null);
 
   useEffect(() => {
@@ -52,7 +54,10 @@ export default function Game() {
     controls.dampingFactor = 0.05;
 
     const planeGeometry = new THREE.PlaneGeometry(100, 100);
-    const planeMaterial = new THREE.MeshPhongMaterial({ color: "#ffffff", shininess: 200 }); // Green, for example
+    const planeMaterial = new THREE.MeshPhongMaterial({
+      color: "#ffffff",
+      shininess: 200,
+    }); // Green, for example
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
     plane.rotation.x = -Math.PI / 2;
     plane.position.y = 0;
@@ -69,7 +74,7 @@ export default function Game() {
     renderer.shadowMap.enabled = true;
     mountRef.current.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -77,6 +82,7 @@ export default function Game() {
     scene.add(directionalLight);
 
     const loader = new GLTFLoader();
+
     loader.load("/Soldier.glb", (gltf) => {
       console.log("Loaded Soldier model");
 
@@ -87,25 +93,25 @@ export default function Game() {
       mixerRef.current = mixer;
 
       const runAnimation = gltf.animations.find((anim) => anim.name === "Run");
+      const walkAnimation = gltf.animations.find(
+        (anim) => anim.name === "Walk"
+      );
       const idleAnimation = gltf.animations.find(
         (anim) => anim.name === "Idle"
       );
 
-      if (runAnimation && idleAnimation) {
+      if (runAnimation && idleAnimation && walkAnimation) {
         console.log("Found run and idle animations");
         const runAction = mixer.clipAction(runAnimation);
         runActionRef.current = runAction;
 
+        const walkAction = mixer.clipAction(walkAnimation);
+        walkActionRef.current = walkAction;
+
         const idleAction = mixer.clipAction(idleAnimation);
         idleActionRef.current = idleAction;
 
-        if (gameAction === ACTION.RUN) {
-          console.log("Playing run animation initially");
-          runActionRef.current.play();
-        } else {
-          console.log("Playing idle animation initially");
-          idleActionRef.current.play();
-        }
+        idleActionRef.current.play();
       }
     });
 
@@ -146,20 +152,29 @@ export default function Game() {
     // Animation update based on gameAction
     const mixer = mixerRef.current;
     const runAction = runActionRef.current;
+    const walkAction = walkActionRef.current;
     const idleAction = idleActionRef.current;
 
-    if (!mixer || !runAction || !idleAction) {
+    if (!mixer || !runAction || !idleAction || !walkAction) {
       return;
     }
 
-    if (gameAction === ACTION.RUN && !runAction.isRunning()) {
-      console.log("Switching to run animation");
-      idleAction.stop();
-      runAction.play();
-    } else if (gameAction !== ACTION.RUN && !idleAction.isRunning()) {
-      console.log("Switching to idle animation");
-      runAction.stop();
-      idleAction.play();
+    idleAction.stop();
+    runAction.stop();
+    walkAction.stop();
+
+    // Play the action based on gameAction
+    switch (gameAction) {
+      case ACTION.RUN:
+        runAction.play();
+        break;
+      case ACTION.WALK:
+        walkAction.play();
+        break;
+      case ACTION.STOP:
+      default:
+        idleAction.play();
+        break;
     }
   }, [gameAction]); // Dependency on gameAction
 

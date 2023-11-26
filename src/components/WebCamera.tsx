@@ -19,9 +19,10 @@ export default function WebCamera({ mobilenet, model }: Models) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoPlaying, setVideoPlaying] = useState(false);
 
-  const [actionCounts, setActionCounts] = useState<Array<number>>([0, 0]);
+  const [actionCounts, setActionCounts] = useState<Array<number>>([0, 0, 0]);
 
   const canvasRefs = [
+    useRef<HTMLCanvasElement | null>(null),
     useRef<HTMLCanvasElement | null>(null),
     useRef<HTMLCanvasElement | null>(null),
   ];
@@ -239,8 +240,8 @@ export default function WebCamera({ mobilenet, model }: Models) {
   }
 
   return (
-    <div className="">
-      <video ref={videoRef} autoPlay className="w-72 scale-x-[-1]"></video>
+    <div className="w-40">
+      <video ref={videoRef} autoPlay className="scale-x-[-1] w-40"></video>
 
       <div className="">
         {!predict && (
@@ -261,9 +262,9 @@ export default function WebCamera({ mobilenet, model }: Models) {
         )}
 
         {modelState !== ModelState.LOADING && (
-          <div className="flex justify-center space-x-2 bg-white py-2">
+          <div className="flex flex-col space-y-4 items-center bg-white py-2">
             {CLASS_NAMES.map((action, idx) => (
-              <div key={idx} className="text-center">
+              <div key={idx} className="text-sm text-center">
                 <p>{action}</p>
                 <canvas
                   key={idx}
@@ -271,7 +272,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
                   onClick={() => {
                     snap(idx);
                   }}
-                  className={`h-32 w-32 scale-x-[-1] cursor-pointer border border-black ${
+                  className={`w-24 h-24 scale-x-[-1] cursor-pointer border border-black ${
                     actionCounts[idx] === 0 && "bg-white"
                   } ${
                     predict &&

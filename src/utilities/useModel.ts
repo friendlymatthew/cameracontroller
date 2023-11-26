@@ -8,10 +8,10 @@ export interface Models {
 export enum ACTION {
   STOP = "Stop",
   RUN = "Run",
-  JUMP = "Jump",
+  WALK = "Walk",
 }
 export const STOP_DATA_GATHER = -1;
-export const CLASS_NAMES = [ACTION.STOP, ACTION.RUN];
+export const CLASS_NAMES = [ACTION.STOP, ACTION.WALK, ACTION.RUN];
 export const MOBILE_NET_INPUT_WIDTH = 224;
 export const MOBILE_NET_INPUT_HEIGHT = 224;
 
@@ -20,7 +20,9 @@ export function initializeModel() {
   model.add(
     tf.layers.dense({ inputShape: [1024], units: 128, activation: "relu" })
   );
-  model.add(tf.layers.dense({ units: CLASS_NAMES.length, activation: "softmax" }));
+  model.add(
+    tf.layers.dense({ units: CLASS_NAMES.length, activation: "softmax" })
+  );
   model.summary();
   model.compile({
     optimizer: "adam",
