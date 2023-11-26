@@ -152,16 +152,19 @@ export default function Game() {
     };
   }, []);
 
+  function setWeight(action: THREE.AnimationAction, weight: number) {
+    action.enabled = true;
+    action.setEffectiveTimeScale(1);
+    action.setEffectiveWeight(weight);
+  }
+
   function crossFade(
     previousAction: THREE.AnimationAction,
     nextAction: THREE.AnimationAction,
     duration: number
   ) {
-    previousAction.enabled = true;
-    nextAction.enabled = true;
-
-    previousAction.setEffectiveWeight(1);
-    nextAction.setEffectiveWeight(1);
+    setWeight(previousAction, 1);
+    setWeight(nextAction, 1);
 
     previousAction.play();
     nextAction.play();
@@ -178,20 +181,25 @@ export default function Game() {
       return;
     }
 
-    idleAction.stop();
-    runAction.stop();
-    walkAction.stop();
+    const previousAction = () => {
+      if (runAction.isRunning()) return runAction;
+      if (walkAction.isRunning()) return walkAction;
+      return idleAction;
+    };
 
     switch (gameAction) {
       case ACTION.RUN:
-        runAction.play();
+        crossFade(previousAction(), runAction, 0.3);
         break;
       case ACTION.WALK:
-        walkAction.play();
+        crossFade(previousAction(), walkAction, 0.5);
         break;
       case ACTION.STOP:
-      default:
-        idleAction.play();
+        if (previousAction() === runAction) {
+          crossFade(runAction, idleAction, 1.5);
+        } else {
+          crossFade(previousAction(), idleAction, 1.0);
+        }
         break;
     }
   }, [gameAction]);

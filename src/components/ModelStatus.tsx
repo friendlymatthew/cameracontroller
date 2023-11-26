@@ -54,9 +54,21 @@ export default function Status({
         state === ModelState.PREDICT && "cursor-pointer"
       } group relative`}
     >
-      <div className={`border-b border-black bg-white p-2`}>
+      <div
+        className={`cursor-pointer border-b border-black bg-white p-2 text-center ${
+          state === ModelState.PREDICT && "bg-green-400"
+        }`}
+      >
         {renderStatus()}
       </div>
+
+      {!showGraph && (
+        <div
+          className={`absolute left-44 top-0 z-20 hidden bg-white p-2 shadow-lg group-hover:block`}
+        >
+          <p> Heres some help</p>
+        </div>
+      )}
       {showGraph && (
         <div
           className={`absolute left-44 top-0 z-10 bg-white p-2 shadow-lg ${

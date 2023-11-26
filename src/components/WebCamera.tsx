@@ -10,6 +10,7 @@ import * as tf from "@tensorflow/tfjs";
 import Status from "./ModelStatus";
 import { useRecoilState } from "recoil";
 import { gameActionAtom } from "~/atoms/gameActionAtom";
+import { HotKeys } from "react-hotkeys";
 
 export enum ModelState {
   LOADING = "loading...",
@@ -137,7 +138,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
     await model.fit(inputsAsTensor, oneHotOutputs, {
       shuffle: true,
       batchSize: 5,
-      epochs: 15,
+      epochs: 20,
       callbacks: { onEpochEnd: logProgress },
     });
 
@@ -226,7 +227,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
   );
 
   useEffect(() => {
-    if (!model || !mobilenet) {
+    if (model === null || mobilenet === null) {
       setModelState(ModelState.LOADING);
     }
 
@@ -248,66 +249,78 @@ export default function WebCamera({ mobilenet, model }: Models) {
     trainingDataOutputs,
   ]);
 
+  const keyMap = {
+    SNAP_ONE: "1",
+    SNAP_TWO: "2",
+    SNAP_THREE: "3",
+  };
+
+  const handlers = {
+    SNAP_ONE: () => snap(0),
+    SNAP_TWO: () => snap(1),
+    SNAP_THREE: () => snap(2),
+  };
+
   return (
-    <div className="w-40 shadow-xl">
-      <video ref={videoRef} autoPlay className="w-full scale-x-[-1]"></video>
+    <HotKeys keyMap={keyMap} handlers={handlers}>
+      <div className="w-40 shadow-xl">
+        <video ref={videoRef} autoPlay className="w-full scale-x-[-1]"></video>
 
-      <Status
-        state={modelState}
-        logs={logs}
-        epoch={epoch}
-        onClick={() => {
-          trainModel()
-            .then(() => {
-              setPredict(true);
-            })
-            .catch((error) => console.error(error));
-        }}
-      />
+        <Status
+          state={modelState}
+          logs={logs}
+          epoch={epoch}
+          onClick={() => {
+            trainModel()
+              .then(() => {
+                setPredict(true);
+              })
+              .catch((error) => console.error(error));
+          }}
+        />
 
-      <div></div>
-
-      {mobilenet && model && (
-        <div className="flex w-full flex-col items-center space-y-4 bg-white py-2">
-          {CLASS_NAMES.map((action, idx) => (
-            <div key={idx} className="group text-center text-base">
-              <p
-                className={`${
-                  predict && gameAction === action && "font-semibold"
-                } transition duration-200 ease-in group-hover:font-semibold`}
-              >
-                {action}
-              </p>
-              <button
-                onClick={() => {
-                  snap(idx);
-                }}
-                className="relative h-24 w-24 cursor-pointer"
-              >
-                {actionCounts[idx] === 0 && (
-                  <div className="absolute left-0 top-0 z-10 flex h-full w-full flex-col justify-center">
-                    <p className="text-center text-3xl font-bold text-gray-500">
-                      {idx + 1}
-                    </p>
-                  </div>
-                )}
-                <canvas
-                  key={idx}
-                  ref={canvasRefs[idx]}
-                  className={`h-24 w-24 scale-x-[-1] cursor-pointer border border-black 
+        {mobilenet && model && (
+          <div className="flex w-full flex-col items-center space-y-4 bg-white py-2">
+            {CLASS_NAMES.map((action, idx) => (
+              <div key={idx} className="group text-center text-base">
+                <p
+                  className={`${
+                    predict && gameAction === action && "font-semibold"
+                  } transition duration-200 ease-in group-hover:font-semibold`}
+                >
+                  {action}
+                </p>
+                <button
+                  onClick={() => {
+                    snap(idx);
+                  }}
+                  className="relative h-24 w-24 cursor-pointer"
+                >
+                  {actionCounts[idx] === 0 && (
+                    <div className="absolute left-0 top-0 z-10 flex h-full w-full flex-col justify-center">
+                      <p className="text-center text-3xl font-bold text-gray-500">
+                        {idx + 1}
+                      </p>
+                    </div>
+                  )}
+                  <canvas
+                    key={idx}
+                    ref={canvasRefs[idx]}
+                    className={`h-24 w-24 scale-x-[-1] cursor-pointer border border-black 
                   ${actionCounts[idx] === 0 && "animate-pulse bg-gray-200"} 
                   ${
                     predict &&
                     gameAction === action &&
                     "shadow-lg shadow-yellow-400"
                   }`}
-                ></canvas>
-              </button>
-              <p>{!predict && actionCounts[idx]}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+                  ></canvas>
+                </button>
+                <p>{!predict && actionCounts[idx]}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </HotKeys>
   );
 }
