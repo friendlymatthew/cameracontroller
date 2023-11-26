@@ -157,15 +157,12 @@ export default function Game() {
     nextAction: THREE.AnimationAction,
     duration: number
   ) {
-    // Ensure both actions are enabled
     previousAction.enabled = true;
     nextAction.enabled = true;
 
-    // Set initial weights
     previousAction.setEffectiveWeight(1);
     nextAction.setEffectiveWeight(1);
 
-    // Start both actions and set the timeScale to synchronize the animations
     previousAction.play();
     nextAction.play();
     nextAction.crossFadeFrom(previousAction, duration, true);
@@ -181,27 +178,21 @@ export default function Game() {
       return;
     }
 
-    let previousAction = idleAction; // Start with a default action, e.g., idle
-    let nextAction;
+    idleAction.stop();
+    runAction.stop();
+    walkAction.stop();
 
-    // Determine the next action based on gameAction
     switch (gameAction) {
       case ACTION.RUN:
-        nextAction = runAction;
+        runAction.play();
         break;
       case ACTION.WALK:
-        nextAction = walkAction;
+        walkAction.play();
         break;
       case ACTION.STOP:
       default:
-        nextAction = idleAction;
+        idleAction.play();
         break;
-    }
-
-    // Call the crossfade function
-    if (previousAction !== nextAction) {
-      crossFade(previousAction, nextAction, 1.0); // 1.0 is the duration of the crossfade
-      previousAction = nextAction;
     }
   }, [gameAction]);
 
