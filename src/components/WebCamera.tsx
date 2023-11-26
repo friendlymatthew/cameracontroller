@@ -241,7 +241,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
 
   return (
     <div className="w-40">
-      <video ref={videoRef} autoPlay className="scale-x-[-1] w-40"></video>
+      <video ref={videoRef} autoPlay className="w-40 scale-x-[-1]"></video>
 
       <div className="">
         {!predict && (
@@ -262,19 +262,25 @@ export default function WebCamera({ mobilenet, model }: Models) {
         )}
 
         {modelState !== ModelState.LOADING && (
-          <div className="flex flex-col space-y-4 items-center bg-white py-2">
+          <div className="flex flex-col items-center space-y-4 bg-white py-2">
             {CLASS_NAMES.map((action, idx) => (
-              <div key={idx} className="text-sm text-center">
-                <p>{action}</p>
+              <div key={idx} className="group text-center text-sm">
+                <p
+                  className={`${
+                    predict && gameAction === action && "font-semibold"
+                  } transition duration-200 ease-in group-hover:font-semibold`}
+                >
+                  {action}
+                </p>
                 <canvas
                   key={idx}
                   ref={canvasRefs[idx]}
                   onClick={() => {
                     snap(idx);
                   }}
-                  className={`w-24 h-24 scale-x-[-1] cursor-pointer border border-black ${
-                    actionCounts[idx] === 0 && "bg-white"
-                  } ${
+                  className={`h-24 w-24 scale-x-[-1] cursor-pointer border border-black 
+                  ${actionCounts[idx] === 0 && "animate-pulse bg-gray-200"} 
+                  ${
                     predict &&
                     gameAction === action &&
                     "shadow-lg shadow-yellow-400"

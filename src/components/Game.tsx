@@ -44,14 +44,14 @@ export default function Game() {
       1,
       100
     );
-    camera.position.set(1, 2, -3);
+    camera.position.set(2, 2, -6);
     camera.lookAt(0, 1, 0);
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xa0a0a0);
     scene.fog = new THREE.Fog(0xa0a0a0, 10, 50);
 
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x8d8d8d, 3);
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x8d8d8d, 2);
     hemiLight.position.set(0, 20, 0);
     scene.add(hemiLight);
 
@@ -93,7 +93,7 @@ export default function Game() {
 
       modelRef.current.traverse((object) => {
         if (object instanceof THREE.Mesh) {
-          object.castShadow = true; 
+          object.castShadow = true;
         }
       });
 
@@ -152,8 +152,26 @@ export default function Game() {
     };
   }, []);
 
+  function crossFade(
+    previousAction: THREE.AnimationAction,
+    nextAction: THREE.AnimationAction,
+    duration: number
+  ) {
+    // Ensure both actions are enabled
+    previousAction.enabled = true;
+    nextAction.enabled = true;
+
+    // Set initial weights
+    previousAction.setEffectiveWeight(1);
+    nextAction.setEffectiveWeight(1);
+
+    // Start both actions and set the timeScale to synchronize the animations
+    previousAction.play();
+    nextAction.play();
+    nextAction.crossFadeFrom(previousAction, duration, true);
+  }
+
   useEffect(() => {
-    // Animation update based on gameAction
     const mixer = mixerRef.current;
     const runAction = runActionRef.current;
     const walkAction = walkActionRef.current;
@@ -163,24 +181,29 @@ export default function Game() {
       return;
     }
 
-    idleAction.stop();
-    runAction.stop();
-    walkAction.stop();
+    let previousAction = idleAction; // Start with a default action, e.g., idle
+    let nextAction;
 
-    // Play the action based on gameAction
+    // Determine the next action based on gameAction
     switch (gameAction) {
       case ACTION.RUN:
-        runAction.play();
+        nextAction = runAction;
         break;
       case ACTION.WALK:
-        walkAction.play();
+        nextAction = walkAction;
         break;
       case ACTION.STOP:
       default:
-        idleAction.play();
+        nextAction = idleAction;
         break;
     }
-  }, [gameAction]); // Dependency on gameAction
+
+    // Call the crossfade function
+    if (previousAction !== nextAction) {
+      crossFade(previousAction, nextAction, 1.0); // 1.0 is the duration of the crossfade
+      previousAction = nextAction;
+    }
+  }, [gameAction]);
 
   return <div className="flex-1" ref={mountRef}></div>;
 }
