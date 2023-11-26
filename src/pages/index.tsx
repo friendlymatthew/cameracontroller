@@ -6,13 +6,9 @@ import {
   type Models,
 } from "~/utilities/useModel";
 import WebCamera from "~/components/WebCamera";
-import { useSetRecoilState } from "recoil";
-import { ModelState, modelStateAtom } from "~/atoms/modelStateAtom";
 import Game from "~/components/Game";
 
 export default function Home() {
-  const setModelState = useSetRecoilState(modelStateAtom);
-
   const [models, setModels] = useState<Models>({
     mobilenet: null,
     model: null,
@@ -23,12 +19,10 @@ export default function Home() {
       const mobilenet = await loadMobileNetFeatureModel();
       const model = initializeModel();
       setModels({ mobilenet, model });
-      setModelState(ModelState.ADD_TRAINING_DATA);
     };
 
     loadModels().catch((error) => {
       console.error(error);
-      setModelState(ModelState.LOADING);
     });
   }, []);
 

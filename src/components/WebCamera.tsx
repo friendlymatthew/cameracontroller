@@ -8,14 +8,20 @@ import {
 } from "~/utilities/useModel";
 import * as tf from "@tensorflow/tfjs";
 import Status from "./ModelStatus";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { ModelState, modelStateAtom } from "~/atoms/modelStateAtom";
+import { useRecoilState } from "recoil";
 import { gameActionAtom } from "~/atoms/gameActionAtom";
 
-export default function WebCamera({ mobilenet, model }: Models) {
-  const modelState = useRecoilValue(modelStateAtom);
-  const [gameAction, setGameAction] = useRecoilState(gameActionAtom);
+export enum ModelState {
+  LOADING = "loading...",
+  ADD_TRAINING_DATA = "add training data",
+  TRAIN = "train model",
+  TRAINING = "training model...",
+  PREDICT = "ready to predict",
+}
 
+export default function WebCamera({ mobilenet, model }: Models) {
+  const [gameAction, setGameAction] = useRecoilState(gameActionAtom);
+  const [modelState, setModelState] = useState<ModelState>(ModelState.LOADING);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoPlaying, setVideoPlaying] = useState(false);
 
@@ -31,7 +37,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
   const [trainingDataOutputs, setTrainingDataOutputs] = useState<number[]>([]);
   const [predict, setPredict] = useState<boolean>(false);
 
-  const [logs, setLogs] = useState<tf.Logs>();
+  const [logs, setLogs] = useState<tf.Logs[]>([]);
   const [epoch, setEpoch] = useState<number>(0);
 
   useEffect(() => {
@@ -116,6 +122,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
   }, [model, predict, mobilenet, setGameAction]);
 
   const trainModel = useCallback(async (): Promise<void> => {
+    setModelState(ModelState.TRAINING);
     tf.util.shuffleCombo(trainingDataInputs, trainingDataOutputs);
 
     const outputsAsTensor = tf.tensor1d(trainingDataOutputs, "int32");
@@ -130,21 +137,19 @@ export default function WebCamera({ mobilenet, model }: Models) {
     await model.fit(inputsAsTensor, oneHotOutputs, {
       shuffle: true,
       batchSize: 5,
-      epochs: 10,
+      epochs: 15,
       callbacks: { onEpochEnd: logProgress },
     });
 
     outputsAsTensor.dispose();
     oneHotOutputs.dispose();
     inputsAsTensor.dispose();
-
-    setPredict(true);
   }, [model, trainingDataInputs, trainingDataOutputs]);
 
   const logProgress = (epoch: number, logs?: tf.Logs): void => {
     if (logs) {
       setEpoch(epoch);
-      setLogs(logs);
+      setLogs((oldLogs) => [...oldLogs, logs]);
       console.log("Data for epoch " + epoch, logs);
     }
   };
@@ -220,64 +225,75 @@ export default function WebCamera({ mobilenet, model }: Models) {
     [collect, canvasRefs]
   );
 
-  function determineState() {
+  useEffect(() => {
     if (!model || !mobilenet) {
-      return ModelState.LOADING;
+      setModelState(ModelState.LOADING);
     }
 
-    if (model && mobilenet) {
-      if (actionCounts.every((cnt) => cnt > 0)) {
-        return ModelState.TRAIN_MODEL;
+    if (actionCounts.every((cnt) => cnt > 0)) {
+      if (predict) {
+        setModelState(ModelState.PREDICT);
+      } else {
+        setModelState(ModelState.TRAIN);
       }
-      return ModelState.ADD_TRAINING_DATA;
+    } else {
+      setModelState(ModelState.ADD_TRAINING_DATA);
     }
-
-    if (predict) {
-      return ModelState.PREDICT;
-    }
-
-    return ModelState.LOADING;
-  }
+  }, [
+    actionCounts,
+    model,
+    mobilenet,
+    predict,
+    trainingDataInputs,
+    trainingDataOutputs,
+  ]);
 
   return (
-    <div className="w-40">
-      <video ref={videoRef} autoPlay className="w-40 scale-x-[-1]"></video>
+    <div className="w-40 shadow-xl">
+      <video ref={videoRef} autoPlay className="w-full scale-x-[-1]"></video>
 
-      <div className="">
-        {!predict && (
-          <Status
-            state={determineState()}
-            logs={
-              determineState() === ModelState.TRAIN_MODEL ? logs : undefined
-            }
-            epoch={
-              determineState() === ModelState.TRAIN_MODEL ? epoch : undefined
-            }
-            onClick={
-              determineState() === ModelState.TRAIN_MODEL
-                ? trainModel
-                : undefined
-            }
-          />
-        )}
+      <Status
+        state={modelState}
+        logs={logs}
+        epoch={epoch}
+        onClick={() => {
+          trainModel()
+            .then(() => {
+              setPredict(true);
+            })
+            .catch((error) => console.error(error));
+        }}
+      />
 
-        {modelState !== ModelState.LOADING && (
-          <div className="flex flex-col items-center space-y-4 bg-white py-2">
-            {CLASS_NAMES.map((action, idx) => (
-              <div key={idx} className="group text-center text-sm">
-                <p
-                  className={`${
-                    predict && gameAction === action && "font-semibold"
-                  } transition duration-200 ease-in group-hover:font-semibold`}
-                >
-                  {action}
-                </p>
+      <div></div>
+
+      {mobilenet && model && (
+        <div className="flex w-full flex-col items-center space-y-4 bg-white py-2">
+          {CLASS_NAMES.map((action, idx) => (
+            <div key={idx} className="group text-center text-base">
+              <p
+                className={`${
+                  predict && gameAction === action && "font-semibold"
+                } transition duration-200 ease-in group-hover:font-semibold`}
+              >
+                {action}
+              </p>
+              <button
+                onClick={() => {
+                  snap(idx);
+                }}
+                className="relative h-24 w-24 cursor-pointer"
+              >
+                {actionCounts[idx] === 0 && (
+                  <div className="absolute left-0 top-0 z-10 flex h-full w-full flex-col justify-center">
+                    <p className="text-center text-3xl font-bold text-gray-500">
+                      {idx + 1}
+                    </p>
+                  </div>
+                )}
                 <canvas
                   key={idx}
                   ref={canvasRefs[idx]}
-                  onClick={() => {
-                    snap(idx);
-                  }}
                   className={`h-24 w-24 scale-x-[-1] cursor-pointer border border-black 
                   ${actionCounts[idx] === 0 && "animate-pulse bg-gray-200"} 
                   ${
@@ -285,13 +301,13 @@ export default function WebCamera({ mobilenet, model }: Models) {
                     gameAction === action &&
                     "shadow-lg shadow-yellow-400"
                   }`}
-                ></canvas>{" "}
-                <p>{!predict && actionCounts[idx]}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                ></canvas>
+              </button>
+              <p>{!predict && actionCounts[idx]}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
