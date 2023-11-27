@@ -1,4 +1,4 @@
-## Demo
+## Demo (sped up to save time, turn on volume for the end)
 https://github.com/friendlymatthew/cameracontroller/assets/38759997/be6816b8-ff6c-42d3-9162-486aa81b2c41
 
 
