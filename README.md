@@ -1,7 +1,8 @@
-## [Demo](https://github.com/friendlymatthew/cameracontroller/assets/38759997/61f9df22-dc70-4892-8bd6-45df5739dc67)
-https://github.com/friendlymatthew/cameracontroller/assets/38759997/61f9df22-dc70-4892-8bd6-45df5739dc67
+## Demo
+https://github.com/friendlymatthew/cameracontroller/assets/38759997/be6816b8-ff6c-42d3-9162-486aa81b2c41
 
 
+## Try it out yourself
 [cameracontroller.vercel.app](https://cameracontroller.vercel.app/)
 
 
@@ -13,6 +14,6 @@ https://github.com/friendlymatthew/cameracontroller/assets/38759997/61f9df22-dc7
 
 
 
-## Wolf joke
+## Really good wolf joke from NML
 
 [![Wolf Joke Video](https://img.youtube.com/vi/XSRHSIkZr58/0.jpg)](https://www.youtube.com/watch?v=XSRHSIkZr58)
