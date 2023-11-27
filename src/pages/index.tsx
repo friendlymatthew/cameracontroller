@@ -41,7 +41,7 @@ export default function Home() {
           crossOrigin={"use-credentials"}
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400&family=Roboto+Mono&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400&family=Roboto+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
       </Head>
@@ -50,17 +50,16 @@ export default function Home() {
           <WebCamera mobilenet={models.mobilenet} model={models.model} />
         </div>
         <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end font-roboto-mono">
-          <div className="group flex cursor-pointer flex-col items-end">
+          <div className="group flex cursor-pointer flex-col items-end space-y-20">
             <Help />
             <p className="duration-125 text-gray-600 transition ease-in group-hover:text-black">
-              help
+              about/help
             </p>
           </div>
           <Link
             title="friendlymatthew"
             href="https://github.com/friendlymatthew"
           />
-
           <Link
             title="source code"
             href="https://github.com/friendlymatthew/cameracontroller"

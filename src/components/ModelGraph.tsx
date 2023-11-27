@@ -25,17 +25,17 @@ export default function ModelGraph({ logs }: ModelGraphProps) {
             labels: [...Array(dataLength).keys()],
             datasets: [
               {
-                label: "Loss",
-                data: lossData,
-                fill: false,
-                borderColor: "red",
-                tension: 0.1,
-              },
-              {
                 label: "Accuracy",
                 data: accuracyData,
                 fill: false,
-                borderColor: "green",
+                borderColor: "#6da34d",
+                tension: 0.1,
+              },
+              {
+                label: "Loss",
+                data: lossData,
+                fill: false,
+                borderColor: "#bd0f15",
                 tension: 0.1,
               },
             ],
@@ -45,6 +45,15 @@ export default function ModelGraph({ logs }: ModelGraphProps) {
               y: {
                 min: 0,
                 max: 1,
+                ticks: {
+                  stepSize: 0.1,
+                },
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: "Epochs",
+                },
               },
             },
           },
@@ -54,5 +63,5 @@ export default function ModelGraph({ logs }: ModelGraphProps) {
     }
   }, [logs]);
 
-  return <canvas ref={chartRef} />;
+  return <canvas className="h-56" ref={chartRef} />;
 }

@@ -38,6 +38,9 @@ export default function WebCamera({ mobilenet, model }: Models) {
   const [trainingDataOutputs, setTrainingDataOutputs] = useState<number[]>([]);
   const [predict, setPredict] = useState<boolean>(false);
 
+  const [customEpoch, setCustomEpoch] = useState<number>(20);
+  const [customBatch, setCustomBatch] = useState<number>(5);
+
   const [logs, setLogs] = useState<tf.Logs[]>([]);
   const [epoch, setEpoch] = useState<number>(0);
 
@@ -137,15 +140,21 @@ export default function WebCamera({ mobilenet, model }: Models) {
 
     await model.fit(inputsAsTensor, oneHotOutputs, {
       shuffle: true,
-      batchSize: 5,
-      epochs: 20,
+      batchSize: customBatch,
+      epochs: customEpoch,
       callbacks: { onEpochEnd: logProgress },
     });
 
     outputsAsTensor.dispose();
     oneHotOutputs.dispose();
     inputsAsTensor.dispose();
-  }, [model, trainingDataInputs, trainingDataOutputs]);
+  }, [
+    model,
+    trainingDataInputs,
+    trainingDataOutputs,
+    customBatch,
+    customEpoch,
+  ]);
 
   const logProgress = (epoch: number, logs?: tf.Logs): void => {
     if (logs) {
@@ -193,37 +202,39 @@ export default function WebCamera({ mobilenet, model }: Models) {
 
   const snap = useCallback(
     (idx: number) => {
-      const frameCount = 5;
+      if (modelState === ModelState.ADD_TRAINING_DATA) {
+        const frameCount = 5;
 
-      for (let i = 0; i < frameCount; i++) {
-        setTimeout(() => {
-          const video = videoRef.current;
-          const canvas = canvasRefs[idx]?.current;
-          if (!video || !canvas) {
-            console.error("Missing video or canvas element ref");
-            return;
-          }
+        for (let i = 0; i < frameCount; i++) {
+          setTimeout(() => {
+            const video = videoRef.current;
+            const canvas = canvasRefs[idx]?.current;
+            if (!video || !canvas) {
+              console.error("Missing video or canvas element ref");
+              return;
+            }
 
-          const context = canvas.getContext("2d");
-          if (!context) {
-            console.error("Unable to get canvas context");
-            return;
-          }
-          console.log("collecting: ", idx, " for: ", canvas);
+            const context = canvas.getContext("2d");
+            if (!context) {
+              console.error("Unable to get canvas context");
+              return;
+            }
+            console.log("collecting: ", idx, " for: ", canvas);
 
-          collect(idx, canvas);
+            collect(idx, canvas);
 
-          setActionCounts((currCount) =>
-            currCount.map((count, action_index) =>
-              action_index === idx ? count + 1 : count
-            )
-          );
+            setActionCounts((currCount) =>
+              currCount.map((count, action_index) =>
+                action_index === idx ? count + 1 : count
+              )
+            );
 
-          context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        }, i * 150);
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          }, i * 150);
+        }
       }
     },
-    [collect, canvasRefs]
+    [collect, canvasRefs, modelState]
   );
 
   useEffect(() => {
@@ -268,6 +279,8 @@ export default function WebCamera({ mobilenet, model }: Models) {
 
         <Status
           state={modelState}
+          customBatch={customBatch}
+          customEpoch={customEpoch}
           logs={logs}
           epoch={epoch}
           onClick={() => {
@@ -294,7 +307,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
                   onClick={() => {
                     snap(idx);
                   }}
-                  className="relative h-24 w-24 cursor-pointer"
+                  className="relative h-24 w-24 cursor-pointer border"
                 >
                   {actionCounts[idx] === 0 && (
                     <div className="absolute left-0 top-0 z-10 flex h-full w-full flex-col justify-center">
@@ -306,7 +319,7 @@ export default function WebCamera({ mobilenet, model }: Models) {
                   <canvas
                     key={idx}
                     ref={canvasRefs[idx]}
-                    className={`h-24 w-24 scale-x-[-1] cursor-pointer border border-black 
+                    className={`h-24 w-24 scale-x-[-1] cursor-pointer  
                   ${actionCounts[idx] === 0 && "animate-pulse bg-gray-200"} 
                   ${
                     predict &&
