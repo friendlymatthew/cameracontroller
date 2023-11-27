@@ -15,7 +15,7 @@ export default function Help() {
   ];
 
   return (
-    <div className="hidden w-1/3 space-y-8 bg-white p-4 shadow-lg group-hover:block">
+    <div className="hidden w-3/4 cursor-text space-y-8 bg-white p-4 shadow-lg group-hover:block md:w-1/3">
       <h1 className="font-medium italic">
         Turn your camera into a controller using a neural network.
       </h1>
